@@ -40,7 +40,7 @@ module Unmix
 
     desc "doctor", "Script doctor, validate that the script's dependencies exists"
     def doctor
-      EXTERNALS_COMMANDS.each do |cmd|
+      EXTERNAL_COMMANDS.each do |cmd|
         Unmix::cmd_exist?(cmd.to_s)? puts("#{cmd} was found".green) : puts("#{cmd} was not found".red)
       end
     end

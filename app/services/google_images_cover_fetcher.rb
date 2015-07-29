@@ -49,7 +49,6 @@ module Unmix
 
     def prefered?(img, index)
       begin
-        binding.pry
         img.height == img.width && 
         (
           (index < 5) || 

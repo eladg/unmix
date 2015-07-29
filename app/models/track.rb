@@ -1,5 +1,4 @@
 class Track
-  attr_accessor :process_file
   attr_accessor :title
   attr_accessor :artist
   attr_accessor :album
@@ -8,4 +7,7 @@ class Track
   attr_accessor :year
   attr_accessor :track_number
   attr_accessor :tracks_count
+
+  # the assosiated track's segment
+  attr_reader :segment
 end

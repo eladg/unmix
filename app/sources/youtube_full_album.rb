@@ -1,18 +1,12 @@
 module Unmix
-  class YouTubeAlbum < SourceBase
-
-    attr_accessor :tracks, :url, :description, :title  
+  class YouTubeFullAlbum < SourceBase
 
     # learn
     def step_1
-      @tracks = []
-
-      # fetch critical information from YouTube
-      info = YouTubeDLInfoGetter.new(url: url, title: true, description: true).perform
-      @title       = info[:title]
-      @description = info[:description]
-
-      @tracks = YouTubeMetaToTracks.new(description: description, title: title).perform
+      info = YouTubeDLInfoGetter.new(url: source.url, title: true, description: true).perform
+      source.title, source.meta_text = info[:title], info[:description]
+      source.segments = YouTubeMetaToSegments.new(source: source).perform
+      binding.pry
     end
 
     # download

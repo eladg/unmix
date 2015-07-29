@@ -1,13 +1,13 @@
 module Unmix
-  class YouTubeMetaToTracks
+  class YouTubeMetaToSegments
+    attr_accessor :segments, :youtube_title, :youtube_description
 
-    attr_accessor :params, :youtube_description, :youtube_title, :tracks
+    def initialize(params)
+      @youtube_description = params[:source].meta_text
+      @youtube_title       = params[:source].title
+      @duration            = pad_time params[:source].duration
 
-    def initialize(params = {})
-      @params = params
-      @youtube_description = params[:description]
-      @youtube_title = params[:title]
-      @tracks = []
+      @segments = []
     end
 
     def track_name(text)
@@ -17,29 +17,20 @@ module Unmix
     end
 
     def start_time(text)
-      text.match(/\d*:((\d|\d\d)|:)*/).to_s
+      pad_time(text.match(/\d*:((\d|\d\d)|:)*/).to_s)
     end
 
-    def set_tracks_basic_info
+    def set_segments_basic_info
       album_title = guess_album_from_title
       lines = youtube_description.split("\n").select{ |line| line =~ /\d:\d/ }
-      lines.each_with_index do |line, index|
-        track = {
-          original_text: line,
-          index: (index+1).to_s.rjust(2,'0'),
-          start_time: start_time(line),
-          process_file: "#{Unmix.process_dir}/#{SecureRandom.urlsafe_base64(4)}.m4a",
 
-          title: track_name(line),
-          artist: guess_artist_from_title,
-          album: guess_album_from_title,
-          artist_album: guess_artist_from_title,
-          genre: "unknown",
-          year: guess_album_year_from_description,
-          track_number: (index+1).to_s.rjust(2,'0').to_i,
-          tracks_count: lines.count
-        }
-        tracks << track
+      lines.each_with_index do |line, index|
+        segment = Segment.new
+        segment.text = line
+        segment.index = (index+1).to_s.rjust(2,'0')
+        segment.start_time = start_time(line)
+        segment.process_file = segment.process_file
+        segments << segment
       end
     end
 
@@ -58,21 +49,21 @@ module Unmix
       youtube_description[/19\d\d|20\d\d/]
     end
 
-    def set_tracks_end_times
-      tracks.each_with_index do |track, index|
-        if track == tracks.last
-          track[:end_time] = "5:00:00" #stupid, but works for now
-        else
-          track[:end_time] = tracks[index+1][:start_time]
-        end
+    def set_segments_end_times
+      segments.each_with_index do |segment, index|
+        segment == segments.last ? 
+          segment.end_time = @duration || "05:00:00" : 
+          segment.end_time = pad_time(segments[index+1].start_time)
       end    
     end
 
-    def set_tracks_durations
-      tracks.each do |track|
+    def set_segments_durations
+      binding.pry
+
+      segments.each do |segment|
 
         # I know it's VERY stupid but it's 5am and I'm over this stupid time crap and want to move on
-        time_arr = track[:end_time].split(":")
+        time_arr = segment.end_time.split(":")
         if time_arr.count == 2
           end_hh = 0
           end_mm = time_arr[0].to_i
@@ -83,7 +74,7 @@ module Unmix
           end_ss = time_arr[2].to_i
         end
 
-        time_arr = track[:start_time].split(":")
+        time_arr = segment.start_time.split(":")
         if time_arr.count == 2
           start_hh = 0
           start_mm = time_arr[0].to_i
@@ -93,16 +84,28 @@ module Unmix
           start_mm = time_arr[1].to_i
           start_ss = time_arr[2].to_i
         end
-        track[:duration] = Time.new(1970, 1, 1, end_hh, end_mm, end_ss) - Time.new(1970, 1, 1, start_hh, start_mm, start_ss)
+        segment.duration = Time.new(1970, 1, 1, end_hh, end_mm, end_ss) - Time.new(1970, 1, 1, start_hh, start_mm, start_ss)
+      end
+    end
+
+
+    def pad_time(time_string)
+      case time_string.split(":").count
+      when 1
+        "00:00:" << time_string
+      when 2
+        "00:" << time_string
+      else
+        time_string
       end
     end
 
     def perform
-      set_tracks_basic_info
-      set_tracks_end_times
-      set_tracks_durations
+      set_segments_basic_info
+      set_segments_end_times
+      set_segments_durations
 
-      tracks
+      segments
     end
   end
 end

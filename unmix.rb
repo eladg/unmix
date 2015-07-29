@@ -13,9 +13,9 @@ UNMIX_APP_ROOT = File.join( UNMIX_ROOT, 'app' )
 EXTERNAL_COMMANDS = %i(youtube-dl ffmpeg AtomicParsley)
 
 # required application sources
-require "./app/unmix_thor.rb"
-require "./app/unmix_helper.rb"
 require "./app/sources/source_base.rb"
+Dir[File.join(UNMIX_APP_ROOT, '*.rb')].each {|file| require file }
+Dir[File.join(UNMIX_APP_ROOT, 'models', '*.rb')].each {|file| require file }
 Dir[File.join(UNMIX_APP_ROOT, 'sources', '*.rb')].each {|file| require file }
 Dir[File.join(UNMIX_APP_ROOT, 'services', '*.rb')].each {|file| require file }
 

@@ -31,7 +31,6 @@ module Unmix
       set_year
       set_track_number
       set_copy_audio_streams
-      binding.pry
       set_outputfile
     end
 
